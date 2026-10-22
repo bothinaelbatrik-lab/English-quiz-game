@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Revision Game 🌟</title>
+    <!-- FontAwesome & Tailwind CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            background: #0f172a;
+            font-family: system-ui, -apple-system, sans-serif;
+            color: white;
+            user-select: none;
+        }
+        .correct-btn {
+            background-color: rgba(34, 197, 94, 0.2) !important;
+            border-color: #22c55e !important;
+            color: #4ade80 !important;
+        }
+        .wrong-btn {
+            background-color: rgba(239, 68, 68, 0.2) !important;
+            border-color: #ef4444 !important;
+            color: #f87171 !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-4">
+
+    <!-- Header -->
+    <header class="w-full max-w-2xl bg-slate-800/80 backdrop-blur rounded-2xl p-4 my-2 border border-slate-700 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600 p-3 rounded-xl text-white">
+                <i class="fa-solid fa-graduation-cap text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg">Grade 4 English Quiz</h1>
+                <p class="text-xs text-slate-400">O.L. Revision Sheets</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl">
+            <i class="fa-solid fa-star text-amber-400 text-lg"></i>
+            <span id="score-val" class="font-bold text-amber-400 text-xl">0</span>
+        </div>
+    </header>
+
+    <!-- Game Box -->
+    <main class="w-full max-w-2xl bg-slate-800 border border-slate-700 rounded-3xl p-6 shadow-2xl my-auto">
+        
+        <!-- Start Screen -->
+        <div id="start-view" class="text-center py-8">
+            <i class="fa-solid fa-gamepad text-6xl text-indigo-400 mb-4 animate-bounce"></i>
+            <h2 class="text-3xl font-bold mb-2">Ready to Play?</h2>
+            <p class="text-slate-400 mb-6">Interactive Revision Game with Voice Reader & Sound Effects!</p>
+            <button onclick="startGame()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 font-bold text-lg rounded-2xl shadow-lg transition transform active:scale-95">
+                Start Game <i class="fa-solid fa-play ml-2"></i>
+            </button>
+        </div>
+
+        <!-- Question Screen -->
+        <div id="quiz-view" class="hidden">
+            <!-- Progress Bar -->
+            <div class="flex justify-between text-xs text-slate-400 font-bold mb-2">
+                <span id="q-counter">Question 1/20</span>
+                <span id="streak-tag" class="text-amber-400 hidden"><i class="fa-solid fa-fire"></i> Streak!</span>
+            </div>
+            <div class="w-full bg-slate-900 h-2.5 rounded-full mb-6 overflow-hidden">
+                <div id="p-bar" class="bg-indigo-500 h-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <!-- Question Box with Read Sentence Button -->
+            <div class="bg-slate-900/80 border border-slate-700 p-5 rounded-2xl mb-6 flex justify-between items-center gap-4">
+                <p id="q-text" class="text-lg font-bold leading-relaxed flex-1"></p>
+                <button id="read-q-btn" onclick="readCurrentQuestion()" class="p-3 bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/40 rounded-xl transition flex items-center justify-center shrink-0" title="Listen to question">
+                    <i class="fa-solid fa-volume-high text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Options -->
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6"></div>
+
+            <!-- Feedback -->
+            <div id="msg-box" class="hidden p-4 rounded-2xl border flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                <div class="flex-1">
+                    <h4 id="msg-title" class="font-bold text-lg"></h4>
+                    <p id="msg-sub" class="text-xs text-slate-300"></p>
+                </div>
+                <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                    <!-- Listen to Answer Button -->
+                    <button id="read-ans-btn" onclick="readCorrectAnswer()" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm rounded-xl transition flex items-center gap-2">
+                        <i class="fa-solid fa-volume-high"></i> Read Answer
+                    </button>
+                    <!-- Next Button -->
+                    <button onclick="nextQ()" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold text-sm transition">
+                        Next <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-view" class="hidden text-center py-8">
+            <i class="fa-solid fa-trophy text-6xl text-amber-400 mb-4 animate-bounce"></i>
+            <h2 class="text-3xl font-bold mb-2">Awesome Job!</h2>
+            <p class="text-slate-400 mb-6">You finished the revision test.</p>
+
+            <div class="bg-slate-900 p-4 rounded-2xl max-w-xs mx-auto mb-6 space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-400">Total Score:</span>
+                    <span id="final-score" class="font-bold text-amber-400 text-lg">0</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-400">Correct:</span>
+                    <span id="final-correct" class="font-bold text-green-400">0</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 font-bold text-lg rounded-2xl shadow-lg">
+                <i class="fa-solid fa-rotate-right mr-2"></i> Play Again
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="text-xs text-slate-500 py-2">
+        Grade 4 Revision Sheet Interactive Game
+    </footer>
+
+    <!-- Audio & Game Engine -->
+    <script>
+        class SoundFX {
+            constructor() { this.ctx = null; }
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+            playSuccess() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.1);
+                osc.frequency.setValueAtTime(783.99, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(now); osc.stop(now + 0.4);
+            }
+            playFail() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.linearRampToValueAtTime(110, now + 0.3);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(now); osc.stop(now + 0.3);
+            }
+        }
+
+        const sound = new SoundFX();
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        const DATA = [
+            { q: "Our ........ help us stay safe and learn.", opts: ["books", "neighbors", "senses", "toys"], ans: 2 },
+            { q: "If we smell smoke, we know there's a ........", opts: ["tree", "flower", "fire", "bird"], ans: 2 },
+            { q: "We ........ the teacher's voice in class.", opts: ["see", "hear", "taste", "smell"], ans: 1 },
+            { q: "I can ........ soft things with my fingers.", opts: ["touch", "hear", "smell", "see"], ans: 0 },
+            { q: "You use your ........ to read a book.", opts: ["arms", "ears", "eyes", "nose"], ans: 2 },
+            { q: "I always ........ my teeth before I go to bed.", opts: ["brush", "brushing", "brushes", "brushed"], ans: 0 },
+            { q: "We ........ with our ears.", opts: ["hear", "see", "taste", "walk"], ans: 0 },
+            { q: "She ........ her backpack every day.", opts: ["carries", "carry", "carried", "carrying"], ans: 0 },
+            { q: "The yummy smell came from a ........ nearby.", opts: ["garden", "TV", "school", "restaurant"], ans: 3 },
+            { q: "I can ........ the soup with my tongue.", opts: ["smell", "hear", "taste", "watch"], ans: 2 },
+            { q: "He gave the man the ........ of his coins.", opts: ["look", "food", "sound", "share"], ans: 2 },
+            { q: "It's good to ........ food with friends.", opts: ["share", "brush", "take", "play"], ans: 0 },
+            { q: "They ........ the books in the morning.", opts: ["to read", "read", "reading", "reads"], ans: 1 },
+            { q: "She ........ vitamins every morning.", opts: ["touches", "takes", "hears", "helps"], ans: 1 },
+            { q: "My sister and I ........ TV in the evening.", opts: ["watch", "watches", "watching", "watched"], ans: 0 },
+            { q: "Fruit is a / an ........ food.", opts: ["unhealthy", "bad", "healthy", "harmful"], ans: 2 },
+            { q: "It's important to help our ........", opts: ["neighbors", "schools", "toys", "clothes"], ans: 0 },
+            { q: "The bus helps ........ traffic.", opts: ["reduce", "increase", "plant", "work"], ans: 0 },
+            { q: "Giraffes eat green ........", opts: ["fish", "leaves", "meat", "paper"], ans: 1 },
+            { q: "Noha is ........ than Nashwa.", opts: ["shortest", "short", "shorter", "a short"], ans: 2 }
+        ];
+
+        let questions = [], idx = 0, score = 0, correct = 0, canAnswer = true;
+
+        function startGame() {
+            sound.init();
+            questions = [...DATA].sort(() => 0.5 - Math.random());
+            idx = 0; score = 0; correct = 0;
+            document.getElementById('score-val').textContent = '0';
+            document.getElementById('start-view').classList.add('hidden');
+            document.getElementById('end-view').classList.add('hidden');
+            document.getElementById('quiz-view').classList.remove('hidden');
+            loadQ();
+        }
+
+        function loadQ() {
+            canAnswer = true;
+            document.getElementById('msg-box').classList.add('hidden');
+            const item = questions[idx];
+            document.getElementById('q-text').textContent = item.q;
+            document.getElementById('q-counter').textContent = `Question ${idx + 1}/${questions.length}`;
+            document.getElementById('p-bar').style.width = `${((idx) / questions.length) * 100}%`;
+
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            item.opts.forEach((opt, i) => {
+                const b = document.createElement('button');
+                b.className = 'w-full p-4 rounded-xl bg-slate-900 border border-slate-700 hover:border-indigo-500 font-semibold text-left transition';
+                b.textContent = opt;
+                b.onclick = () => choose(i, b);
+                container.appendChild(b);
+            });
+        }
+
+        function readCurrentQuestion() {
+            const item = questions[idx];
+            const textToRead = item.q.replace(/\.\.\.\.\.\.\.\./g, 'blank');
+            speakText(textToRead);
+        }
+
+        function readCorrectAnswer() {
+            const item = questions[idx];
+            const fullSentence = item.q.replace(/\.\.\.\.\.\.\.\./g, item.opts[item.ans]);
+            speakText(fullSentence);
+        }
+
+        function choose(chosenIdx, btnEl) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const item = questions[idx];
+            const msgBox = document.getElementById('msg-box');
+            const msgTitle = document.getElementById('msg-title');
+            const msgSub = document.getElementById('msg-sub');
+
+            if (chosenIdx === item.ans) {
+                sound.playSuccess();
+                btnEl.classList.add('correct-btn');
+                score += 100;
+                correct++;
+                document.getElementById('score-val').textContent = score;
+
+                confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 } });
+
+                msgBox.className = "p-4 rounded-2xl border border-green-500 bg-green-950/40 text-green-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-3";
+                msgTitle.textContent = "Excellent! 🎉";
+                msgSub.textContent = "You got the correct answer!";
+            } else {
+                sound.playFail();
+                btnEl.classList.add('wrong-btn');
+                
+                const allBtns = document.getElementById('options-container').children;
+                allBtns[item.ans].classList.add('correct-btn');
+
+                msgBox.className = "p-4 rounded-2xl border border-red-500 bg-red-950/40 text-red-300 flex flex-col md:flex-row justify-between items-start md:items-center gap-3";
+                msgTitle.textContent = "Try Again! 💪";
+                msgSub.textContent = `Correct answer: ${item.opts[item.ans]}`;
+            }
+
+            msgBox.classList.remove('hidden');
+            readCorrectAnswer();
+        }
+
+        function nextQ() {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            idx++;
+            if (idx < questions.length) {
+                loadQ();
+            } else {
+                document.getElementById('quiz-view').classList.add('hidden');
+                document.getElementById('end-view').classList.remove('hidden');
+                document.getElementById('final-score').textContent = score;
+                document.getElementById('final-correct').textContent = `${correct}/${questions.length}`;
+                confetti({ particleCount: 100, spread: 80, origin: { y: 0.5 } });
+            }
+        }
+    </script>
+</body>
+</html>
